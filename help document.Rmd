@@ -1,0 +1,98 @@
+---
+output:
+  html_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+  word_document:
+    toc: yes
+---
+
+
+### What is this App used for?
+This App allows you to perform a liner regression, generate relative statistics and output graphics using your own datasets. Anyone who has interest in statistics and the need to perform either simple or multiple liner regression is welcome! 
+
+### What can this App do for me?
+-	__Upload csv data file__: This function allows you to upload an external CSV file which identifies the the first row as variable names that follows the naming conventions in R (e.g.: all letters are lower case and only separated by period or underscore).
+-	__Load test dataset__: This button allows you to load our default dataset as an example to help you walk through the App. Further exhibition and interpretation of how our App works for liner regression will be provided. Then, it is easier for you to understand the statistics and graphics when using your own data. 
+-	__Explanatory Variables (Numeric)__: This selection box lets you select one or multiple numeric explanatory variable(s).
+-	__Explanatory Variables (Categorical)__: This selection box lets you select one or multiple categorical/dichotomous explanatory variable(s).
+-	__Outcome variable__: This selection box lets you select only one outcome variable of your interest. The outcome variable should be numerical to satisfy linear model assumption. 
+- __Name of dataset__: This text input box lets you type the name of the dataset. If you load the test dataset, the default name will be “birthwt”.
+- __Author name__: This text input box lets you type the name of the author. 
+- __Document format__: This radio buttons lets you choose the format of your report. You can choose pdf, html or word.
+- __Download Button__: This bottom allows you to download your linear regression report following our default format. 
+- __Interpretation__: This text input box under every Tabset allows you to write the interpretation based on the output. 
+
+### What statistics and graphics can I obtain using this App?
+-	__Scatterplot__: it shows how one variable is affected by another for two variables. When multiple variables are chosen, it becomes a scatterplot matrix which could determine liner relationship among those variables. Only numerical variables are shown in the App.
+-	__Boxplots__: it is a visualization of summary statistics (minimum, first quartile, median, third quartile and maximum) for categorical data. The plot won’t show if your model only contains numerical variables.
+-	__Summary statistics__: it gives an R output for the model you build. Outputs include estimates, standard error, p value, etc. for all the variables and R squared for the model. This provides you a numerical summary of your model. 
+-	__Diagnostic plots__: There are four plots of diagnostics to check the assumption of linear regression. The residual vs. fitted plot mainly tests linearity and variance of the errors; the Q-Q plot shows distribution of residuals; the location-scale plot is used to check the assumption of homoscedasticity; and the residuals vs. leverage plot is used to identify influential observations.
+-	__Added variable plots__: it is a widely used index mainly in multiple linear regression to check how much a certain added variable contribute to the model fitting. 
+-	__Marginal model plots__: it is a widely used index mainly in multiple linear regression to visualize how the created model fits your data. 
+
+### An example using the default low infant birth weight data.
+
+Here is an example to help you walk through all the functions our App has. All the interpretation will be useful in explaining your own data.
+
+Data description: The default data “birthwt” can be used to identify risk factors associated with giving birth to a low birth weight baby (weighing less than 2500 grams). Data were collected on 189 women, 59 of which had low birth weight babies and 130 of which had normal birth weight babies. 
+
+The variables identified below have been shown to be associated with low birth weight in the obstetrical literature. The goal of our current example was to ascertain if these variables were important in the population being served by the medical center where the data were collected. This data is from Hosmer et al. , 2013.
+
+-	Low: indicator of birth weight less than 2.5 kg.
+-	Age: mother's age in years.
+-	Lwt: mother's weight in pounds at last menstrual period.
+-	Race: mother's race (1 = white, 2 = black, 3 = other).
+-	Smoke: smoking status during pregnancy.
+-	Ptl: number of previous premature labors.
+-	Ht: history of hypertension.
+-	Ui: presence of uterine irritability.
+-	Ftv: number of physician visits during the first trimester.
+-	Bwt: birth weight in grams. 
+
+In this model building mother's age, mother's weight in pounds at last menstrual period, mother's smoke status (categorical) are assumed important factors predicting infants' birth weight thus are included. 
+
+First, explore the linear relationship between infants' birth weight and numerical covariates by creating a scatterplot matrix. There seem to be no linear relationship among the three variables.
+
+```{r,echo=FALSE}
+library(MASS)
+pairs(~age+lwt+bwt,data=birthwt,main="Scatterplot Matrix")
+```
+
+Boxplot is mainly used for categorical data. In this plot, we can crudely read that infants of non-smoking mothers are lightly heavier than that of smoking mothers, and non-smoking mothers seem to have more extreme large values thus making them have bigger standard deviation of birth weight. We also notice there is an extreme value in smoking mother, but it is hard to tell whether the extreme value would be an outlier only from this plot. We will check that in the diagnostic plot.
+
+```{r,echo=FALSE}
+boxplot(bwt~smoke,data=birthwt,xlab="Smoking status during pregnancy",ylab="Birth weight (grams)",main="Boxplot of bwt versus smoke")
+```
+
+Summary statistics demonstrates this model is a significant model predicting low birth weight at a 0.05 alpha level (p=0.0036). Mother's weight and smoking status are associate with infants' low birth weight while mother's age is insignificant with a p value greater than 0.05. The R-squared being small (0.07) reveals the model is not a good fit. 
+
+```{r,echo=FALSE}
+model <- lm(bwt~age+lwt+as.factor(smoke),data=birthwt)
+summary(model)
+```
+
+Diagnostic plots are used to check the assumption of linear regression. 
+For the residuals vs. fitted plot, the residual line is around 0, suggesting linearity satisfied and the variance of the error terms
+are equal. For the Q-Q plot, it shows that the residuals are approximately normally distributed, but not heavily tailed. Several data points with large residuals are highlighted with a number aside the residual line. These data points may be outliers in this model. The location-scale plot is useful for checking the assumption of homoscedasticity. The standard deviations of the error terms
+should be constant and do not depend on the x-value, which means that there are no patterns in the residuals thus standard residuals do not have relationship with the fitted value. From the plot we can see the assumption of homoscedasticity is satisfied. The residuals vs. leverage plot is used to identify influential observations. Cook’s distance is a standard estimate to assess the influence of a data point when performing linear regression. We could see the observations are well
+behaved. The extreme value found in the boxplot is not an outlier.
+
+```{r,echo=FALSE}
+par(mfrow = c(2, 2))
+plot(model)
+```
+
+Added variable plots are to check how much a certain added variable contribute to the model. All the three variables seem to have certain effect on the model individually that mother's age and weight have positive effect while smoking status has negative effect. Mother's weight seems to have the greatest impact for it has the steepest slope.
+
+```{r,warning=FALSE,echo=FALSE}
+library(car)
+avPlots(model)
+```
+
+Marginal model plots consider how precisely the model fits the data. The closer the two lines the better the model is. Thus, the last plot shows the model can predict the data somehow, but not perfectly. There are several gaps between the two lines, especially when the birth weight of infants is between 2.8 kg to 3.4 kg. For individual variables, mother's weight in pounds at last menstrual period seems fit the model best while age fits worst. Since we treat variable smoke as factor, marginal model plots will not automatically skip factors or interactions.
+
+```{r,echo=FALSE}
+mmps(model,terms=~age+lwt)
+```
